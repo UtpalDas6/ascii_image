@@ -10,7 +10,7 @@ python script.py
 <br />
 INPUT:
 <br/>
-![ScreenShot](/pic.JPG)
+![ScreenShot](/pic.jpg)
 <br />
 OUTPUT:
 <br/>
