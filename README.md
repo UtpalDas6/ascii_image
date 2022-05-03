@@ -5,7 +5,7 @@ steps:
 <br />
 pip install pywhatkit
 <br />
-python script.py
+python pyscript.py
 
 
 INPUT:
