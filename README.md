@@ -7,7 +7,7 @@ pip install pywhatkit
 <br />
 python script.py
 
-<br />
+
 INPUT:
 <br/>
 ![ScreenShot](pic.JPG)
