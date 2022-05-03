@@ -10,8 +10,8 @@ python script.py
 <br />
 INPUT:
 <br/>
-![Test Image 3](pic.jpg)
+![ScreenShot](/pic.JPG)
 <br />
 OUTPUT:
 <br/>
-![Test Image 3](ascii.jpg)
+![ScreenShot](/ascii.JPG)
