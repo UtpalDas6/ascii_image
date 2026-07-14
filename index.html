@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASCII-INATOR!</title>
+<style>
+  @font-face {
+    font-family: 'Comic';
+    src: local('Comic Sans MS'), local('Comic Sans');
+  }
+  :root {
+    --ink: #111;
+    --paper: #f4efe2;
+    --pow: #ffce00;
+    --pop: #ff3b3b;
+    --panel-shadow: 6px 6px 0 var(--ink);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(var(--ink) 1px, transparent 1.6px) 0 0/14px 14px,
+      var(--paper);
+    color: var(--ink);
+    font-family: 'Comic', 'Segoe UI', system-ui, sans-serif;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 7vw, 4rem);
+    text-align: center;
+    margin: 0 0 24px;
+    letter-spacing: 2px;
+    -webkit-text-stroke: 2px var(--ink);
+    color: var(--pow);
+    text-shadow: 4px 4px 0 var(--ink);
+    transform: rotate(-2deg);
+  }
+  .panel {
+    background: var(--paper);
+    border: 4px solid var(--ink);
+    box-shadow: var(--panel-shadow);
+    padding: 20px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .caption {
+    position: absolute;
+    top: -18px;
+    left: 16px;
+    background: var(--pop);
+    color: #fff;
+    border: 3px solid var(--ink);
+    padding: 2px 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    transform: rotate(-3deg);
+  }
+  #drop {
+    border: 3px dashed var(--ink);
+    padding: 36px 16px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.15s;
+  }
+  #drop.drag { background: var(--pow); }
+  #drop small { display: block; font-weight: 400; margin-top: 6px; opacity: 0.7; }
+  input[type="file"] { display: none; }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+    align-items: center;
+    margin-top: 18px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .controls label { display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { width: 140px; }
+  button {
+    font-family: inherit;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: var(--pow);
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 8px 18px;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+  button:active { box-shadow: 0 0 0 var(--ink); transform: translate(3px, 3px); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #out {
+    overflow-x: auto;
+    background: #fff;
+    border: 2px solid var(--ink);
+  }
+  #ascii {
+    margin: 0;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 6px;
+    line-height: 6px;
+    white-space: pre;
+    display: block;
+  }
+  #placeholder { text-align: center; opacity: 0.55; font-weight: 700; padding: 40px 0; }
+  footer { text-align: center; font-size: 0.8rem; opacity: 0.6; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ASCII-INATOR!</h1>
+
+  <div class="panel">
+    <span class="caption">Step 1</span>
+    <div id="drop">
+      Drop an image here or click to choose
+      <small>Converted entirely in your browser — nothing uploaded anywhere.</small>
+    </div>
+    <input type="file" id="file" accept="image/*" />
+    <div class="controls">
+      <label>Width (cols)
+        <input type="range" id="cols" min="40" max="220" value="110" />
+        <span id="colsVal">110</span>
+      </label>
+      <label><input type="checkbox" id="invert" /> Invert</label>
+      <button id="download" disabled>Download .txt</button>
+      <button id="copy" disabled>Copy</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <span class="caption">Result</span>
+    <div id="out">
+      <div id="placeholder">POW! Your ASCII art appears here.</div>
+      <pre id="ascii" hidden></pre>
+    </div>
+  </div>
+
+  <footer>ascii_image — client-side ASCII art converter</footer>
+</div>
+
+<script>
+  const RAMP = " .:-=+*#%@"; // light -> dark
+  const fileInput = document.getElementById('file');
+  const drop = document.getElementById('drop');
+  const colsSlider = document.getElementById('cols');
+  const colsVal = document.getElementById('colsVal');
+  const invertBox = document.getElementById('invert');
+  const asciiEl = document.getElementById('ascii');
+  const placeholder = document.getElementById('placeholder');
+  const downloadBtn = document.getElementById('download');
+  const copyBtn = document.getElementById('copy');
+
+  let currentImage = null;
+
+  drop.addEventListener('click', () => fileInput.click());
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadFile(fileInput.files[0]);
+  });
+  colsSlider.addEventListener('input', () => {
+    colsVal.textContent = colsSlider.value;
+    render();
+  });
+  invertBox.addEventListener('change', render);
+
+  function loadFile(file) {
+    const img = new Image();
+    img.onload = () => { currentImage = img; render(); };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function render() {
+    if (!currentImage) return;
+    const cols = parseInt(colsSlider.value, 10);
+    const charAspect = 0.5; // monospace glyphs are ~2x taller than wide
+    const rows = Math.max(1, Math.round((currentImage.height / currentImage.width) * cols * charAspect));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(currentImage, 0, 0, cols, rows);
+    const { data } = ctx.getImageData(0, 0, cols, rows);
+
+    const invert = invertBox.checked;
+    let text = '';
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const i = (y * cols + x) * 4;
+        const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        let idx = Math.round(((invert ? lum : 255 - lum) / 255) * (RAMP.length - 1));
+        text += RAMP[idx];
+      }
+      text += '\n';
+    }
+
+    asciiEl.textContent = text;
+    asciiEl.hidden = false;
+    placeholder.hidden = true;
+    downloadBtn.disabled = false;
+    copyBtn.disabled = false;
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([asciiEl.textContent], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ascii-art.txt';
+    a.click();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(asciiEl.textContent);
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => (copyBtn.textContent = 'Copy'), 1200);
+  });
+</script>
+</body>
+</html>
