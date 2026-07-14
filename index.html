@@ -26,6 +26,28 @@
       --out-bg: #0d0d0d;
     }
   }
+  :root[data-theme="light"] {
+    --ink: #111;
+    --paper: #f4efe2;
+    --pow: #ffce00;
+    --pop: #ff3b3b;
+    --out-bg: #fff;
+  }
+  :root[data-theme="dark"] {
+    --ink: #eee;
+    --paper: #1a1a1a;
+    --pow: #ffd93d;
+    --pop: #ff5c5c;
+    --out-bg: #0d0d0d;
+  }
+  #theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 6px 10px;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
@@ -125,9 +147,14 @@
   #placeholder { text-align: center; opacity: 0.55; font-weight: 700; padding: 40px 0; }
   footer { text-align: center; font-size: 0.8rem; opacity: 0.6; margin-top: 12px; }
 </style>
+<script>
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 </head>
 <body>
 <div class="wrap">
+  <button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
   <h1>ASCII-INATOR!</h1>
 
   <div class="panel">
@@ -241,6 +268,22 @@
     copyBtn.textContent = 'Copied!';
     setTimeout(() => (copyBtn.textContent = 'Copy'), 1200);
   });
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') || (prefersDark.matches ? 'dark' : 'light');
+  }
+  function paintToggle() {
+    themeToggle.textContent = currentTheme() === 'dark' ? '☀️' : '🌙';
+  }
+  themeToggle.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    paintToggle();
+  });
+  paintToggle();
 </script>
 </body>
 </html>
