@@ -14,7 +14,17 @@
     --paper: #f4efe2;
     --pow: #ffce00;
     --pop: #ff3b3b;
+    --out-bg: #fff;
     --panel-shadow: 6px 6px 0 var(--ink);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eee;
+      --paper: #1a1a1a;
+      --pow: #ffd93d;
+      --pop: #ff5c5c;
+      --out-bg: #0d0d0d;
+    }
   }
   * { box-sizing: border-box; }
   html, body {
@@ -89,6 +99,7 @@
     font-weight: 800;
     text-transform: uppercase;
     background: var(--pow);
+    color: #111;
     border: 3px solid var(--ink);
     box-shadow: 3px 3px 0 var(--ink);
     padding: 8px 18px;
@@ -99,7 +110,7 @@
   button:disabled { opacity: 0.4; cursor: not-allowed; }
   #out {
     overflow-x: auto;
-    background: #fff;
+    background: var(--out-bg);
     border: 2px solid var(--ink);
   }
   #ascii {
